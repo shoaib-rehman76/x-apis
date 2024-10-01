@@ -30,7 +30,7 @@ export const twitterClient = axios.create({
 //     },
 // });
 app.use('/api', xRouter)
-const server = app.listen(8080, () => console.log('connected'));
+const server = app.listen(process.env.PORT, () => console.log('connected'));
 
 // Set the timeout to 5 minutes (300,000 milliseconds)  
 server.setTimeout(300000);
