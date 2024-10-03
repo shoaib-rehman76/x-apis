@@ -33,7 +33,7 @@ export const loadAllTweets = async (req, res) => {
         return res.status(201).json({
             status: 'success',
             message: 'data loaded successfully',
-            hashtag,
+            data,
         })
 
 
