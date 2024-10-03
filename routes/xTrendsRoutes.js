@@ -1,8 +1,10 @@
 import express from 'express';
-import { loadXtrends } from '../controllers/xTrendsController.js';
+import { loadAllTweets, loadTweetConversation } from '../controllers/xTrendsController.js';
 
 const router = express.Router()
-router.route('/load-all-tweets').get(loadXtrends)
+router.route('/load-all-tweets').get(loadAllTweets)
+router.route('/load-tweet-conversation/:id').get(loadTweetConversation)
+
 
 
 
