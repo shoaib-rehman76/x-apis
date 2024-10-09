@@ -2,47 +2,77 @@ import axios from "axios";
 import { twitterClient } from "../index.js";
 import { getAllGemeineTrends } from "../helpers/scrapingApi.js";
 
-export const loadAllTweets = async (req, res) => {
-    console.log('called loadAllTweets');
+const fetchTweets = async () => {
     const allTweetsArr = []
-    try {
-        const hashtag = await getAllGemeineTrends()
-        console.log(Object.values(hashtag).splice(0, 10), 'hashtags ------>');
-        const keywords = Object.values(hashtag).splice(0, 10);
+    const allTweetsObj = {}
+    const hashtag = await getAllGemeineTrends()
+    const keywords = Object.values(hashtag).splice(0, 20);
 
-        // keywords.forEach(async (keyword) => {
-        // console.log('i am called ', keyword);
-        const response = await twitterClient.get(`tweets/search/recent?query=germany&max_results=10&tweet.fields=author_id,conversation_id,created_at,geo,id,lang,source,text&user.fields=created_at,description,entities,id,location,name,url,username`)
-        // console.log(response, 'res');
+    for (const [idx, key] of keywords.entries()) {
+        try {
+            const nestedKey = (key.includes('#') || key.includes('$')) ? key.split('#')[1] || key.split('$')[1] : key
+            const response = await twitterClient.get(`tweets/search/recent?query=${nestedKey}&max_results=20&tweet.fields=author_id,conversation_id,created_at,geo,id,lang,source,text&user.fields=created_at,description,entities,id,location,name,url,username`);
+            const data = response.data.data;
 
-        // if (response) {
-        //     allTweetsArr.push(response)
-        // }
-        // })
 
-        const data = response.data
-        if (!response.data) {
-            return res.status(400).json({
-                status: 'fail',
-                message: 'data not found',
-                data,
-            })
+            // for (const index in data) {
+            //     const conversationResponse = await twitterClient.get(`tweets/search/recent?query=conversation_id:${'1841006384235565302'}&max_results=10`);
+            //     const conversationData = conversationResponse?.data;
+
+            //     if (conversationData) {
+            //         data[index]['conversations'] = conversationData[index] || 'No comments'
+            //     }
+            // }
+
+            allTweetsObj[key] = data
+
+        } catch (error) {
+            if (error.response && error.response.status === 429) {
+                // Throwing an error with relevant details
+                throw {
+                    status: 429,
+                    message: 'Too Many Requests',
+                    details: error.response.data,
+                };
+            } else {
+                console.error(`Error fetching tweets for keyword ${key}:`, error);
+            }
         }
+    }
 
+    return allTweetsObj
+};
+
+export const loadAllTweets = async (req, res) => {
+    try {
+        const tweets = await fetchTweets()
+        if (!tweets || Object.keys(tweets).length === 0) {
+            return res.status(404).json({
+                status: 'fail',
+                message: 'No tweets found',
+                data: {},
+            });
+        }
 
         return res.status(201).json({
             status: 'success',
             message: 'data loaded successfully',
-            data,
+            data: tweets,
         })
-
-
 
     } catch (error) {
+        if (error.status === 429) {
+            return res.status(429).json({
+                status: 'fail',
+                message: error.message,
+                details: error.details,
+            });
+        }
+
         res.status(500).json({
             status: 'fail',
-            message: 'server error',
-        })
+            message: 'Server error',
+        });
     }
 }
 
