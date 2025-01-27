@@ -7,22 +7,12 @@ const fetchTweets = async () => {
     const allTweetsObj = {}
     const hashtag = await getAllGemeineTrends()
     const keywords = Object.values(hashtag).splice(0, 20);
-
+    
     for (const [idx, key] of keywords.entries()) {
         try {
             const nestedKey = (key.includes('#') || key.includes('$')) ? key.split('#')[1] || key.split('$')[1] : key
             const response = await twitterClient.get(`tweets/search/recent?query=${nestedKey}&max_results=20&tweet.fields=author_id,conversation_id,created_at,geo,id,lang,source,text&user.fields=created_at,description,entities,id,location,name,url,username`);
             const data = response.data.data;
-
-
-            // for (const index in data) {
-            //     const conversationResponse = await twitterClient.get(`tweets/search/recent?query=conversation_id:${'1841006384235565302'}&max_results=10`);
-            //     const conversationData = conversationResponse?.data;
-
-            //     if (conversationData) {
-            //         data[index]['conversations'] = conversationData[index] || 'No comments'
-            //     }
-            // }
 
             allTweetsObj[key] = data
 
@@ -45,6 +35,8 @@ const fetchTweets = async () => {
 
 export const loadAllTweets = async (req, res) => {
     try {
+        console.log('i am called!');
+        
         const tweets = await fetchTweets()
         if (!tweets || Object.keys(tweets).length === 0) {
             return res.status(404).json({
