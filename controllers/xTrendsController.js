@@ -6,7 +6,7 @@ const fetchTweets = async () => {
     const allTweetsArr = []
     const allTweetsObj = {}
     const hashtag = await getAllGemeineTrends()
-    const keywords = Object.values(hashtag).splice(0, 20);
+    const keywords = Object.values(hashtag).splice(0, 10);
     
     for (const [idx, key] of keywords.entries()) {
         try {
@@ -30,13 +30,13 @@ const fetchTweets = async () => {
         }
     }
 
+
+
     return allTweetsObj
 };
 
 export const loadAllTweets = async (req, res) => {
-    try {
-        console.log('i am called!');
-        
+    try {        
         const tweets = await fetchTweets()
         if (!tweets || Object.keys(tweets).length === 0) {
             return res.status(404).json({
@@ -44,7 +44,7 @@ export const loadAllTweets = async (req, res) => {
                 message: 'No tweets found',
                 data: {},
             });
-        }
+        }        
 
         return res.status(201).json({
             status: 'success',
